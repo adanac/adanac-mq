@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Built-By: allen
+Build-Jdk: 1.8.0_60
+Specification-Title: adanac-mq
+Specification-Version: 1.0.0
+Implementation-Title: adanac-mq
+Implementation-Version: 1.0.0
+Implementation-Vendor-Id: com.adanac.framework
+Created-By: Maven Integration for Eclipse
+
