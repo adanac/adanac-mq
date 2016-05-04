@@ -1,6 +1,7 @@
 package com.adanac.framework.mq.activemq;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.Properties;
 
 import javax.jms.Connection;
@@ -12,17 +13,24 @@ import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import org.apache.activemq.transport.TransportListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.jms.core.SessionCallback;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import com.adanac.framework.mq.exception.MqException;
+import com.adanac.framework.uniconfig.client.UniconfigClient;
+import com.adanac.framework.uniconfig.client.UniconfigClientImpl;
+import com.adanac.framework.uniconfig.client.UniconfigNode;
 
 /**
  * ActiveMQ 操作模板
+ * 
  * @author adanac
  * @version 1.0
  */
-public class MQTemplate {
+public class MQTemplate implements InitializingBean {
+
 	private static final Logger LOG = LoggerFactory.getLogger(MQTemplate.class);
 
 	/**
@@ -34,15 +42,17 @@ public class MQTemplate {
 
 	/**
 	 * 通过ActiveMQConfig创建
+	 * 
 	 * @param mqConfig
 	 */
 	public MQTemplate(MQConfig mqConfig) {
 		this.mqConfig = mqConfig;
-		init();
+
 	}
 
 	/**
 	 * 通过Properties创建
+	 * 
 	 * @param properties
 	 */
 	public MQTemplate(Properties properties) {
@@ -50,24 +60,44 @@ public class MQTemplate {
 	}
 
 	/**
-	 * 通过classPath 配置文件创建
-	 * @param classPathResources
+	 * 通过统一配置创建
+	 * 
+	 * @param unconfigNode
 	 */
-	public MQTemplate(String classPathResources) {
-		this(MQConfig.buildFromClassPathResources(classPathResources));
+	public MQTemplate(String nodeName) {
+
+		try {
+			UniconfigClient uniconfigClient = UniconfigClientImpl.getInstance();
+
+			UniconfigNode uniconfigNode = uniconfigClient.getConfig(nodeName);
+
+			uniconfigNode.sync();
+
+			String nodeValue = uniconfigNode.getValue();
+
+			Assert.hasText(nodeValue, "获取不到配置节点信息");
+
+			Properties properties = new Properties();
+
+			properties.load(new StringReader(nodeValue));
+
+			this.mqConfig = MQConfig.buildFromProperties(properties);
+		} catch (Exception e) {
+			throw new RuntimeException("创建失败", e);
+		}
 	}
 
 	/**
 	 * 初始化
 	 */
-	private void init() {
+	public void init() {
 		ActiveMQConnectionFactory connectionFactory = createConnectionFactory();
 		this.pool = createPool(connectionFactory);
 		this.pool.initConnectionsPool();
 	}
 
 	/**
-	 *消费
+	 * 消费
 	 */
 	public void destory() {
 		this.pool.stop();
@@ -75,6 +105,7 @@ public class MQTemplate {
 
 	/**
 	 * 创建ActiveMQConnectionFactory
+	 * 
 	 * @return
 	 */
 	private ActiveMQConnectionFactory createConnectionFactory() {
@@ -145,6 +176,7 @@ public class MQTemplate {
 
 	/**
 	 * 关闭connection
+	 * 
 	 * @param connection
 	 */
 	public void closeConnection(Connection connection) {
@@ -159,6 +191,7 @@ public class MQTemplate {
 
 	/**
 	 * 关闭session
+	 * 
 	 * @param session
 	 */
 	public void closeSession(Session session) {
@@ -173,11 +206,14 @@ public class MQTemplate {
 
 	/**
 	 * 创建connection
+	 * 
 	 * @return
 	 */
 	public Connection getConnection() {
 		try {
 			Connection connection = pool.createConnection();
+
+			// 重试次数设置
 
 			if (StringUtils.hasLength(mqConfig.getClientID())) {
 				connection.setClientID(mqConfig.getClientID());
@@ -192,6 +228,7 @@ public class MQTemplate {
 
 	/**
 	 * 创建session
+	 * 
 	 * @param connection
 	 * @return
 	 */
@@ -233,6 +270,11 @@ public class MQTemplate {
 			closeSession(session);
 			closeConnection(connection);
 		}
+
+	}
+
+	public void afterPropertiesSet() throws Exception {
+		init();
 
 	}
 }

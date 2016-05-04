@@ -3,8 +3,8 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-        <groupId>com.bn.framework.archetypes</groupId>
-        <artifactId>bn-parent</artifactId>
+        <groupId>com.adanac.framework.archetypes</groupId>
+        <artifactId>adanac-parent</artifactId>
         <version>1.0.0</version>
     </parent>
   <groupId>com.adanac.framework</groupId>
@@ -62,13 +62,7 @@
 
 
         <!-- mq -->
-
-       <!--  <dependency>
-            <groupId>org.apache.activemq</groupId>
-            <artifactId>activemq-all</artifactId>
-            <version>5.11.1</version>
-        </dependency> -->
-        
+    
          <dependency>
 		    <groupId>org.apache.activemq</groupId>
 		    <artifactId>activemq-client</artifactId>
@@ -90,14 +84,14 @@
 
         <!-- mq -->
 
-        <!--kafka-->
-
+       
+        
+        <!--统一配置 -->
         <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka_2.10</artifactId>
-            <version>0.8.2.0</version>
+	        <groupId>com.adanac.framework</groupId>
+			<artifactId>adanac-uniconfig-client</artifactId>
+			<version>1.0.0</version>
         </dependency>
-        <!--kafka-->
 
 
     </dependencies>
